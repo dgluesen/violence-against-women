@@ -8,6 +8,7 @@
 # ---- Libraries/packages used in this script ----
 library(dplyr)                            # data manipulation focused on data frames
 library(ggplot2)                          # general plotting engine
+library(ggrepel)                          # labels with allocation line
 library(showtext)                         # usage of Google fonts
 
 
@@ -59,6 +60,8 @@ cScatter    = c('#db5461', '#2e3b94') # first normal scatter, second highlight s
 cHue        = c('#eaddd7', '#e9beaf', '#e69e8e', '#e27b74', '#db5461', '#665E62')
 cGradual    = c('#f8f3f1', '#920000')
 
+# Note: The following specifications are aligned to the later used ggsave statement which
+# is optimized for a squared output.
 themeViolence <- theme(
   plot.background  = element_rect(fill       = cBackground),
   panel.background = element_rect(fill       = cBackground),
@@ -99,8 +102,6 @@ themeViolence <- theme(
   panel.grid.minor.y = element_blank(),
   axis.ticks.x       = element_blank(),
   axis.ticks.y       = element_blank(),
-  axis.text.x        = element_blank(),
-  axis.text.y        = element_blank(),
   axis.line.x.top    = element_blank(),
   axis.line.x.bottom = element_blank(),
   axis.line.y.left   = element_blank(),
@@ -249,7 +250,11 @@ plotViolenceEU <- ggplot() +
        y        = NULL,
        caption  = 'Data source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en\n(Accessed on 01 October 2019)',
        tag      = NULL) +
-  themeViolence
+  themeViolence +
+  theme( # Alternate specific elements in the standard theme
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank()
+  )
 
 # Export chart
 ggsave(
@@ -260,3 +265,211 @@ ggsave(
   height = 55,
   units = 'mm'
 )
+
+
+# ---- Creation of data frame and viz for violence in OECD countries ----
+df_oecdviolence <- iso %>%
+  dplyr::filter(code2 %in% getCountriesOf('oecd')) %>%
+  dplyr::left_join(df, by = 'code3') %>%
+  dplyr::select(code2, code3, country,
+                prevalenceviolence) %>%
+  base::unique() %>%
+  dplyr::mutate(category = case_when(              # Introduce categories for clearer viz
+    prevalenceviolence <= 0.05 ~ 'below 5%',
+    prevalenceviolence <= 0.10 ~ '6% to 10%',
+    prevalenceviolence <= 0.15 ~ '11% to 15%',
+    prevalenceviolence <= 0.20 ~ '16% to 20%',
+    prevalenceviolence <= 0.25 ~ '21% to 25%',
+    prevalenceviolence <= 0.30 ~ '26% to 30%',
+    prevalenceviolence <= 0.35 ~ '31% to 35%',
+    prevalenceviolence <= 0.40 ~ '36% to 40%',
+    prevalenceviolence > 0.40  ~ 'above 40%',
+    TRUE                       ~ 'no value'
+  )) %>%
+  dplyr::filter(!is.na(prevalenceviolence)) %>%
+  dplyr::mutate(flag = paste0('img/flags/', tolower(code2), '.svg'))
+
+# Reorder countries prevalence value 
+df_oecdviolence$code3 <- factor(df_oecdviolence$code3,
+                                levels = df_oecdviolence$code3[base::order(-df_oecdviolence$prevalenceviolence)])
+
+# Drawing chart
+plotViolenceOECD <- ggplot() +
+  geom_segment(data  = df_oecdviolence,
+               size  = 0.15,
+               alpha = 0.65,
+               aes(x     = code3,
+                   xend  = code3,
+                   y     = 0.0,
+                   yend  = prevalenceviolence,
+                   color = prevalenceviolence)) +
+  geom_point(data = df_oecdviolence,
+             aes(x     = code3,
+                 y     = prevalenceviolence,
+                 fill  = prevalenceviolence,
+                 color = prevalenceviolence)) +
+  geom_text(data  = df_oecdviolence,
+            color = cBackground,
+            size  = 4.0,
+            aes(x      = code3,
+                y      = prevalenceviolence,
+                label  = sprintf("%1.0f", 100*prevalenceviolence),
+                hjust  = 0.5,
+                family = fontTitle)) +
+  geom_text(data  = df_oecdviolence,
+            color = cText,
+            aes(x      = code3,
+                y      = 0,
+                label  = country,
+                angle  = 90,
+                hjust  = 0.0,
+                family = fontTitle)) +
+  scale_color_gradient(low = cGradual[1], high = cGradual[2]) +
+  scale_fill_gradient(low = cGradual[1], high = cGradual[2]) +
+  scale_y_continuous(breaks   = c(0.0, 0.1, 0.2, 0.3, 0.4),
+                     labels   = c('0%', '10%', '20%', '30%', '40%'),
+                     position = 'right') +
+  labs(title    = 'Domestic violence is common in OECD countries',
+       subtitle = 'Share of women suffered violence during lifetime by partners',
+       x        = NULL,
+       y        = NULL,
+       caption  = 'Data source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en\n(Accessed on 01 October 2019); No value for Republic of Korea and Israel',
+       tag      = NULL) +
+  themeViolence +
+  theme( # Alternate specific elements in the standard theme
+    axis.title         = element_text(color    = cTitle),
+    axis.text          = element_text(color    = cTitle),
+    axis.text.x        = element_blank(),
+    panel.grid.major.y = element_line(color    = cTitle,
+                                      size     = 0.1,
+                                      linetype = 'dotted'),
+    legend.position    = 'none'
+  )
+
+# Export chart
+ggsave(
+  filename = 'out/violence_oecd.png',
+  plot = plotViolenceOECD,
+  type = 'cairo',
+  width = 55,
+  height = 55,
+  units = 'mm'
+)
+
+
+# ---- Relationship between attitude towards and prevalence of violence ----
+df_relation <- iso %>%
+  dplyr::left_join(df, by = 'code3') %>%
+  dplyr::select(code2, code3, country,
+                attitudeviolence,
+                prevalenceviolence) %>%
+  base::unique() %>%
+  dplyr::mutate(highlight = case_when( # Highlight specific countries
+    code2 %in% c('TL', 'ET', 'CD', 'JO', 'JM', 'CA', 'DE',
+                 'CN', 'IN', 'US', 'DO', 'BO', 'JP', 'RU') ~ TRUE,
+    TRUE                                                   ~ FALSE
+  )) %>%
+  dplyr::mutate(country = case_when(   # Abbreviate long country names
+    code2 == 'TL' ~ 'East Timor',
+    code2 == 'CD' ~ 'DR Congo',
+    code2 == 'BO' ~ 'Bolivia',
+    code2 == 'DO' ~ 'Dominican Rep.',
+    code2 == 'RU' ~ 'Russia',
+    TRUE          ~ country
+  ))
+# Note: The selection for highlighted countries is purely subjective; Here, some
+# major industrial nations and outliers are choosen
+
+# Drawing chart
+plotRelationPrevAtt <- ggplot() +
+  geom_line(data   = df_relation,
+            stat   = 'smooth',
+            method = 'loess',
+            span   = 1.5,
+            alpha  = 0.075,
+            color  = cTitle,
+            aes(x = attitudeviolence,
+                y = prevalenceviolence)) +
+  geom_ribbon(data   = df_relation,
+              stat   = 'smooth',
+              method = 'loess',
+              span   = 1.5,
+              alpha  = 0.035,
+              fill   = cText,
+              aes(x = attitudeviolence,
+                  y = prevalenceviolence)) +
+  geom_point(data  = df_relation,
+             alpha = 0.45,
+             size  = 0.75,
+             aes(x     = attitudeviolence,
+                 y     = prevalenceviolence,
+                 color = highlight)) +
+  geom_text_repel(data          = dplyr::filter(df_relation, code2 %in% c('TL', 'JM', 'US',
+                                                                          'DO', 'RU')),
+                  family        = fontTitle,
+                  color         = cTitle,
+                  hjust         = 0.5,
+                  nudge_x       = 0.07,
+                  nudge_y       = 0.07,
+                  segment.size  = 0.1,
+                  segment.color = cTitle,
+                  aes(x = attitudeviolence,
+                      y = prevalenceviolence,
+                      label = country)) +
+  geom_text_repel(data          = dplyr::filter(df_relation, code2 %in% c('BO', 'ET', 'CD',
+                                                                          'JO', 'DE', 'CN',
+                                                                          'IN', 'CA', 'JP')),
+                  family        = fontTitle,
+                  color         = cTitle,
+                  hjust         = 0.5,
+                  nudge_x       = 0.07,
+                  nudge_y       = -0.07,
+                  segment.size  = 0.1,
+                  segment.color = cTitle,
+                  aes(x = attitudeviolence,
+                      y = prevalenceviolence,
+                      label = country)) +
+  scale_color_manual(values = c(cScatter[1], cScatter[2])) +
+  scale_size(range = c(0, 5)) +
+  scale_x_continuous(limits = c(0.00, 0.95),
+                     breaks = c(0.0, 0.2, 0.4, 0.6, 0.8),
+                     labels = c('0%', '20%', '40%', '60%', '80%')) +
+  scale_y_continuous(limits = c(0.00, 0.75),
+                     breaks = c(0.0, 0.2, 0.4, 0.6, 0.8),
+                     labels = c('0%', '20%', '40%', '60%', '80%')) +
+  labs(title    = 'Violence prevalence vs. attitude across countries',
+       subtitle = 'Consent to violence and experiences of violence partly coincide',
+       x        = 'Women agreeing violence in partnership can be justified',
+       y        = 'Share of women suffered violence by partners',
+       caption  = 'Data source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en\n(Accessed on 01 October 2019); All countries fully available with regard to data points',
+       tag      = NULL) +
+  themeViolence +
+  theme( # Alternate specific elements in the standard theme
+    plot.title         = element_text(hjust = 1.0),
+    plot.subtitle      = element_text(hjust  = 1.0,
+                                      margin = unit(c(0.0, 0.0, 1.0, 0.0), "pt")),
+    plot.caption       = element_text(margin = unit(c(+2.0, 0.0, -0.75, 0.0), "pt")),
+    axis.title         = element_text(size  = 1.00 * fontSize,
+                                      color = cTitle),
+    axis.text          = element_text(size  = 0.85 * fontSize,
+                                      color = cTitle),
+    panel.grid.major.x = element_line(color    = cTitle,
+                                      size     = 0.05,
+                                      linetype = 'solid'),
+    panel.grid.major.y = element_line(color    = cTitle,
+                                      size     = 0.05,
+                                      linetype = 'solid'),
+    legend.position    = 'none'
+  )
+
+# Export chart
+ggsave(
+  filename = 'out/relation_prevatt.png',
+  plot = plotRelationPrevAtt,
+  type = 'cairo',
+  width = 55,
+  height = 55,
+  units = 'mm'
+)
+
+
