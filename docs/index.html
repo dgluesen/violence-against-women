@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Violence against women</title>
+
+	<!-- Google font -->
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CMuli:400,700" rel="stylesheet">
+	<!-- Bootstrap -->
+	<link type="text/css" rel="stylesheet" href="css/bootstrap.min.css" />
+	<!-- Font Awesome Icon -->
+	<link rel="stylesheet" href="css/font-awesome.min.css">
+	<!-- Custom stlylesheet -->
+	<link type="text/css" rel="stylesheet" href="css/style.css" />
+
+	<style>
+	@import url('https://fonts.googleapis.com/css?family=Assistant:200&display=swap');
+	</style>
+
+</head>
+
+<body>
+	<!-- HEADER -->
+	<header id="header">
+		<!-- NAV -->
+		<div id="nav">
+			<div id="nav-top">
+				<div class="container">
+					<!-- social -->
+					<ul class="nav-social">
+						<li><a href="https://linkedin.com/in/dennisgluesenkamp" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+						<li><a href="https://twitter.com/dgluesen" target="_blank"><i class="fa fa-twitter"></i></a></li>
+						<li><a href="https://instagram.com/dgluesen" target="_blank"><i class="fa fa-instagram"></i></a></li>
+						<li><a href="https://github.com/dgluesen" target="_blank"><i class="fa fa-github"></i></a></li>
+					</ul>
+					<!-- /social -->
+				</div>
+			</div>
+		</div>
+		<!-- /NAV -->
+
+		<!-- PAGE HEADER -->
+		<div id="post-header" class="page-header">
+			<div class="page-header-bg" style="background-image: url('./img/title.jpg');" data-stellar-background-ratio="0.5"></div>
+			<div class="container">
+				<div class="row">
+					<div class="col-md-10">
+						<div class="post-category">
+							<a>#violenceagainstwomen&emsp; #dataviz&emsp; #viz2thinkabout</a>
+						</div>
+						<h1>Violence against women</h1>
+						<ul class="post-meta">
+							<li><a href="http://dgluesen.github.io">Dennis Gluesenkamp</a></li>
+							<li>November 2019</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /PAGE HEADER -->
+	</header>
+	<!-- /HEADER -->
+
+	<!-- section -->
+	<div class="section">
+		<!-- container -->
+		<div class="container">
+			<!-- row -->
+			<div class="row">
+				<div class="col-md-8">
+					<!-- post content -->
+					<div class="section-row">
+						<h3 style="margin-top:1.0cm;" id="introduction">Introduction</h3>
+						<p>Violence against women, especially in intimate relationships, is a global scourge that does not halt at any cultural or social group. According to Oxfam, one in three women in the world experiences some form of violence in the course of their lives and thus a profound violation of their human rights [<a href="#oxfam">1</a>]. On this subject, the OECD's open database contains a source of figures from many countries around the world [<a href="#oecd2019">2</a>]. Although the figures given there are from 2014, the problem is persistent and still of acute importance. It is therefore a central concern of this work to recall the figures and to raise awareness of the problem. For this reason, two indicators from this data source are considered and presented as visualizations in the following.</p>
+						<p>In this short essay the contents of the graphics are explained first. Afterwards, a technical explanation of the visualization can be found, especially with regard to the adaptations and settings of the theme for interested ggplot2 users. The post on Instagram, R-code, and the GitHub repository can be reached via the links on the right hand side.</p>
+
+						<h3 style="margin-top:1.0cm;" id="dataset">Data set and visualized indicators</h3>
+						<p>There are many forms of violence against women. Without any differentiation in the OECD data, the absolute figures are alarming. The data set comprises five indicators. The following two were processed for all income groups in the charts shown here:</p>
+						<ul class="list-style">
+							<li><p><i>"Prevalence of violence in the lifetime:</i> The percentage of women who have experienced physical and/or sexual violence from an intimate partner at some time in their life.<i>"</i> [<a href="#oecd2019">2</a>]</p></li>
+							<li><p><i>"Attitudes toward violence:</i> The percentage of women who agree that a husband/partner is justified in beating his wife/partner under certain circumstances.<i>"</i> [<a href="#oecd2019">2</a>]</p></li>
+						</ul>
+						<p>In addition, there are three indicators on legislation concerning violence against women, which are not included here. The state of data collection for the individual countries is 2014. There are no further points in time.</p>
+
+						<h3 style="margin-top:1.0cm;" id="results">Results and charts</h3>
+						<p>Regionally and culturally limited, the figures were initially considered only for the countries of the European Union (see Figure 1). In the three most populous countries, Germany, Great Britain and France, at least every fifth woman experiences violence in her life (DE 22%, GB 29%, FR 26%). Even in the countries with the lowest values, the indicator is still 13%. These are Austria, Spain, Croatia, Poland and Slovenia. Latvia and Denmark show the highest values in the EU (32%).</p>
+						<figure>
+							<img src="./img/violence_eu.png" width="75%">
+							<figcaption style="margin-top:0.2cm;">Fig. 1: Color-coded prevalence of violence in the lifetime <br>in the countries of the Eurpean Union</figcaption>
+						</figure>
+						<p>Even higher prevalences are achieved in a comparison of OECD countries (see Fig. 2). In Mexico almost every second woman (47%) is affected and in Turkey (42%), Chile and the United States (36% each) more than every third woman. Switzerland (10%) and Canada (6%) have the lowest figures. Domestic violence is therefore widespread and cannot be traced back to cultural or regional circumstances (only), as the comparison between the USA and Canada in particular shows.</p>
+						<figure>
+							<img src="./img/violence_oecd.png" width="75%">
+							<figcaption style="margin-top:0.2cm;">Fig. 2: Prevalence of violence in the lifetime <br>in OECD countries</figcaption>
+						</figure>
+						<p>An interesting comparison can be made with the figures on prevalence on the one hand and the attitude of women towards violence in a relationship on the other. First of all, there is a more or less large group of women in all countries of the world who agree with the statement already quoted above that the partner is allowed to use violence in a relationship under certain circumstances. In many nations this attitude represents more than one woman in five, in a few cases more than half. Is there any connection between this acceptance of violence and its actual manifestation? The answer can only be given to a limited extent, restricted to these indicators, as Figure 3 also shows. A slight tendency can be seen that in countries with a higher acceptance of violence by women, they are more likely to experience violence. Due to the spread, however, this explanation is simplifying and a broader context would have to be used for a comprehensive answer.</p>
+						<figure>
+							<img src="./img/relation_prevatt.png" width="75%">
+							<figcaption style="margin-top:0.2cm;">Fig. 3: Prevalence of violence vs. attitude towards violence<br>across countries of the world</figcaption>
+						</figure>
+						<p>Nevertheless, special combinations can be observed for individual countries. Canada, for instance, is at a very low level for both indicators and thus shows a high degree of respect for women's rights. Bolivia has a comparatively low level of acceptance of violence in relationships, although many women actually experience violence. In Jordan and China, the opposite is true in this respect.</p>
+
+						<h3 style="margin-top:1.0cm;" id="technical">Technical design of the graphics</h3>
+
+						<figure style="margin-top:2.0cm;">
+							<img src="./img/end.jpg" width="100%">
+						</figure>
+
+						<h4 style="margin-top:2.0cm;" id="references">References</h4>
+						<p id="oxfam">[1] Oxfam International. "Violence against women and girls: enough is enough". <a href="https://www.oxfam.org/en/take-action/campaigns/say-enough-violence-against-women-and-girls/violence-against-women-and-girls-enough-enough">https://www.oxfam.org/en/take-action/campaigns/say-enough-violence-against-women-and-girls/violence-against-women-and-girls-enough-enough</a>. Accessed: 2019-11-08</p>
+						<p id="oecd2019">[2] OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en <a href="https://data.oecd.org/inequality/violence-against-women.htm">https://data.oecd.org/inequality/violence-against-women.htm</a>. Accessed: 2019-11-08</p>
+						<p>Photo at title/above references by <a href="https://unsplash.com/@fairytailphotography">Sydney Sims</a> on <a href="https://unsplash.com/">Unsplash</a></p>
+					</div>
+					<!-- /post content -->
+				</div>
+
+				<div class="col-md-4">
+
+					<!-- category widget -->
+					<div class="aside-widget" style="margin-top:1.0cm;">
+						<div class="section-title">
+							<h2 class="title">Table of content</h2>
+						</div>
+						<div class="category-widget" style="margin-bottom:1.5cm;">
+							<ul>
+								<li><a href="#introduction">Introduction</a></li>
+								<li><a href="#dataset">Data set and visualized indicators</a></li>
+								<li><a href="#results">Results and charts</a></li>
+								<li><a href="#technical">Technical design of the graphics</a></li>
+								<li><a href="#references">References</a></li>
+							</ul>
+						</div>
+					</div>
+					<!-- /category widget -->
+
+					<!-- social widget -->
+					<div class="aside-widget" style="margin-top:1.0cm;">
+						<div class="section-title">
+							<h2 class="title">Coding, visualizations and other</h2>
+						</div>
+						<div class="social-widget">
+							<ul>
+								<li>
+									<a href="#" class="social-instagram" target="_blank">
+										<img src="img/instagram.png" width="46" height="53"><br><br>
+										<span>Instagram<br>Post</span>
+									</a>
+								</li>
+								<li>
+									<a href="https://nbviewer.jupyter.org/github/dgluesen/wrangling-sales-workload/blob/master/wrangling-sales-workload.ipynb" class="social-rmarkdown" target="_blank">
+										<img src="img/rmarkdown.png" width="45" height="53"><br><br>
+										<span>R Markdown<br>HTML</span>
+									</a>
+								</li>
+								<li>
+									<a href="https://github.com/dgluesen/violence-against-women" class="social-github" target="_blank">
+										<img src="img/github.png" width="53" height="53"><br><br>
+										<span>GitHub<br>Repository</span>
+									</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<!-- /social widget -->
+
+					<!-- post widget -->
+					<!-- <div class="aside-widget">
+						<div class="section-title">
+							<h2 class="title">Recommendations</h2>
+						</div> -->
+						<!-- post -->
+						<!-- <div class="post post-widget">
+							<a class="post-img" href="blog-post.html"><img src="./img/widget-3.jpg" alt=""></a>
+							<div class="post-body">
+								<div class="post-category">
+									<a href="category.html">Lifestyle</a>
+								</div>
+								<h3 class="post-title"><a href="blog-post.html">Ne bonorum praesent cum, labitur persequeris definitionem quo cu?</a></h3>
+							</div>
+						</div> -->
+						<!-- /post -->
+					<!-- </div> -->
+					<!-- /post widget -->
+
+					<!-- gallery widget -->
+					<div class="aside-widget">
+						<div class="section-title">
+							<h2 class="title">Gallery</h2>
+						</div>
+						<div class="galery-widget">
+							<ul>
+								<li><a href="https://raw.githubusercontent.com/dgluesen/violence-against-women/master/out/violence_eu.png"><img src="./img/gallery1.jpg" alt=""></a></li>
+								<li><a href="https://raw.githubusercontent.com/dgluesen/violence-against-women/master/out/violence_oecd.png"><img src="./img/gallery2.jpg" alt=""></a></li>
+								<li><a href="https://raw.githubusercontent.com/dgluesen/violence-against-women/master/out/relation_prevatt.png"><img src="./img/gallery3.jpg" alt=""></a></li>
+							</ul>
+						</div>
+					</div>
+					<!-- /galery widget -->
+				</div>
+			</div>
+			<!-- /row -->
+		</div>
+		<!-- /container -->
+	</div>
+	<!-- /SECTION -->
+
+	<!-- FOOTER -->
+	<footer id="footer">
+		<!-- container -->
+		<div class="container">
+			<!-- row -->
+			<div class="footer row">
+				<div class="col-md-6 col-md-push-9">
+					<!-- social -->
+					<ul class="nav-social">
+						<li><a href="https://linkedin.com/in/dennisgluesenkamp" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+						<li><a href="https://twitter.com/dgluesen" target="_blank"><i class="fa fa-twitter"></i></a></li>
+						<li><a href="https://instagram.com/dgluesen" target="_blank"><i class="fa fa-instagram"></i></a></li>
+						<li><a href="https://github.com/dgluesen" target="_blank"><i class="fa fa-github"></i></a></li>
+					</ul>
+					<!-- /social -->
+				</div>
+				<div class="col-md-6 col-md-pull-6">
+					<div class="footer-copyright">
+						<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+						Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
+						<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+					</div>
+				</div>
+			</div>
+			<!-- /row -->
+		</div>
+		<!-- /container -->
+	</footer>
+	<!-- /FOOTER -->
+
+	<!-- jQuery Plugins -->
+	<script src="js/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/jquery.stellar.min.js"></script>
+	<script src="js/main.js"></script>
+
+</body>
+
+</html>

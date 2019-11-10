@@ -50,7 +50,7 @@ font_add_google(name = 'Lora', family = 'Lora')
 showtext_auto()
 fontTitle = 'Fjalla One'
 fontText  = 'Lora'
-fontSize  = 12
+fontSize  = 20
 
 cBackground = '#191718'
 cShadow     = '#59504b'
@@ -116,7 +116,7 @@ themeViolence <- theme(
                                    color  = cTitle,
                                    hjust  = 0.0),
   legend.key        = element_blank(),
-  legend.key.size   = unit(2, "mm"),
+  legend.key.size   = unit(2.75, "mm"),
   legend.margin     = margin(0.0, 0.0, 0.0, -15.0),
   
   complete = FALSE
@@ -145,11 +145,6 @@ iso <- ISOcodes::ISO_3166_1 %>%
                 country = Name,
                 mapgroup = group)
 
-oecd <- iso %>%
-  dplyr::filter(code3 %in% c('AUS', 'AUT', 'BEL', 'CAN', 'CHE', 'DEU', 'DNK', 'ESP', 'FIN', 'FRA',
-                             'GBR', 'GRC', 'IRE', 'ISL', 'ITA', 'JPN', 'KOR', 'LUX', 'MEX', 'NLD',
-                             'NOR', 'NZL', 'PRT', 'SWE', 'TUR', 'USA'))
-
 
 # ---- Attitude towards violence against women ----
 # The percentage of women who agree that a husband/partner is justified in beating his
@@ -170,7 +165,7 @@ attitudeviolence <- utils::read.csv('dat/violence.csv', sep = ',', stringsAsFact
 # most recent survey from 2014 is used for this evaluation.
 
 
-# ---- Prevalence of violence in the lifetime
+# ---- Prevalence of violence in the lifetime ----
 # The percentage of women who have experienced physical and/or sexual violence from an
 # intimate partner at some time in their life
 # Source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en
@@ -232,13 +227,13 @@ plotViolenceEU <- ggplot() +
                color = cBackground,
                fill  = cShadow,
                alpha = 0.2,
-               size  = 0.1,
+               size  = 0.2,
                aes(x     = long,
                    y     = lat,
                    group = mapgroup)) +
   geom_polygon(data  = df_euviolence,
                color = cBackground,
-               size  = 0.25,
+               size  = 0.5,
                aes(x     = long,
                    y     = lat,
                    group = mapgroup,
@@ -261,8 +256,8 @@ ggsave(
   filename = 'out/violence_eu.png',
   plot = plotViolenceEU,
   type = 'cairo',
-  width = 55,
-  height = 55,
+  width = 91.5,
+  height = 91.5,
   units = 'mm'
 )
 
@@ -286,8 +281,7 @@ df_oecdviolence <- iso %>%
     prevalenceviolence > 0.40  ~ 'above 40%',
     TRUE                       ~ 'no value'
   )) %>%
-  dplyr::filter(!is.na(prevalenceviolence)) %>%
-  dplyr::mutate(flag = paste0('img/flags/', tolower(code2), '.svg'))
+  dplyr::filter(!is.na(prevalenceviolence))
 
 # Reorder countries prevalence value 
 df_oecdviolence$code3 <- factor(df_oecdviolence$code3,
@@ -296,7 +290,7 @@ df_oecdviolence$code3 <- factor(df_oecdviolence$code3,
 # Drawing chart
 plotViolenceOECD <- ggplot() +
   geom_segment(data  = df_oecdviolence,
-               size  = 0.15,
+               size  = fontSize * 0.0125,
                alpha = 0.65,
                aes(x     = code3,
                    xend  = code3,
@@ -304,13 +298,14 @@ plotViolenceOECD <- ggplot() +
                    yend  = prevalenceviolence,
                    color = prevalenceviolence)) +
   geom_point(data = df_oecdviolence,
+             size  = fontSize * 0.15,
              aes(x     = code3,
                  y     = prevalenceviolence,
                  fill  = prevalenceviolence,
                  color = prevalenceviolence)) +
   geom_text(data  = df_oecdviolence,
             color = cBackground,
-            size  = 4.0,
+            size  = fontSize * 0.333,
             aes(x      = code3,
                 y      = prevalenceviolence,
                 label  = sprintf("%1.0f", 100*prevalenceviolence),
@@ -318,6 +313,7 @@ plotViolenceOECD <- ggplot() +
                 family = fontTitle)) +
   geom_text(data  = df_oecdviolence,
             color = cText,
+            size  = fontSize * 0.333,
             aes(x      = code3,
                 y      = 0,
                 label  = country,
@@ -351,8 +347,8 @@ ggsave(
   filename = 'out/violence_oecd.png',
   plot = plotViolenceOECD,
   type = 'cairo',
-  width = 55,
-  height = 55,
+  width = 91.5,
+  height = 91.5,
   units = 'mm'
 )
 
@@ -386,7 +382,7 @@ plotRelationPrevAtt <- ggplot() +
             stat   = 'smooth',
             method = 'loess',
             span   = 1.5,
-            alpha  = 0.075,
+            alpha  = 0.08,
             color  = cTitle,
             aes(x = attitudeviolence,
                 y = prevalenceviolence)) +
@@ -394,13 +390,13 @@ plotRelationPrevAtt <- ggplot() +
               stat   = 'smooth',
               method = 'loess',
               span   = 1.5,
-              alpha  = 0.035,
+              alpha  = 0.04,
               fill   = cText,
               aes(x = attitudeviolence,
                   y = prevalenceviolence)) +
   geom_point(data  = df_relation,
-             alpha = 0.45,
-             size  = 0.75,
+             alpha = 0.5,
+             size  = 0.125 * fontSize,
              aes(x     = attitudeviolence,
                  y     = prevalenceviolence,
                  color = highlight)) +
@@ -408,10 +404,11 @@ plotRelationPrevAtt <- ggplot() +
                                                                           'DO', 'RU')),
                   family        = fontTitle,
                   color         = cTitle,
+                  size          = fontSize * 0.333,
                   hjust         = 0.5,
                   nudge_x       = 0.07,
                   nudge_y       = 0.07,
-                  segment.size  = 0.1,
+                  segment.size  = 0.2,
                   segment.color = cTitle,
                   aes(x = attitudeviolence,
                       y = prevalenceviolence,
@@ -421,38 +418,38 @@ plotRelationPrevAtt <- ggplot() +
                                                                           'IN', 'CA', 'JP')),
                   family        = fontTitle,
                   color         = cTitle,
+                  size          = fontSize * 0.333,
                   hjust         = 0.5,
                   nudge_x       = 0.07,
                   nudge_y       = -0.07,
-                  segment.size  = 0.1,
+                  segment.size  = 0.2,
                   segment.color = cTitle,
                   aes(x = attitudeviolence,
                       y = prevalenceviolence,
                       label = country)) +
   scale_color_manual(values = c(cScatter[1], cScatter[2])) +
   scale_size(range = c(0, 5)) +
-  scale_x_continuous(limits = c(0.00, 0.95),
+  scale_x_continuous(limits = c(0.00, 0.90),
                      breaks = c(0.0, 0.2, 0.4, 0.6, 0.8),
                      labels = c('0%', '20%', '40%', '60%', '80%')) +
-  scale_y_continuous(limits = c(0.00, 0.75),
+  scale_y_continuous(limits = c(0.00, 0.65),
                      breaks = c(0.0, 0.2, 0.4, 0.6, 0.8),
                      labels = c('0%', '20%', '40%', '60%', '80%')) +
   labs(title    = 'Violence prevalence vs. attitude across countries',
        subtitle = 'Consent to violence and experiences of violence partly coincide',
        x        = 'Women agreeing violence in partnership can be justified',
        y        = 'Share of women suffered violence by partners',
-       caption  = 'Data source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en\n(Accessed on 01 October 2019); All countries fully available with regard to data points',
+       caption  = 'Data source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en\n(Accessed on 01 October 2019); Including only those countries fully available with regard to data points',
        tag      = NULL) +
   themeViolence +
   theme( # Alternate specific elements in the standard theme
     plot.title         = element_text(hjust = 1.0),
     plot.subtitle      = element_text(hjust  = 1.0,
                                       margin = unit(c(0.0, 0.0, 1.0, 0.0), "pt")),
-    plot.caption       = element_text(margin = unit(c(+2.0, 0.0, -0.75, 0.0), "pt")),
-    axis.title         = element_text(size  = 1.00 * fontSize,
-                                      color = cTitle),
-    axis.text          = element_text(size  = 0.85 * fontSize,
-                                      color = cTitle),
+    plot.caption       = element_text(hjust  = 1.0,
+                                      margin = unit(c(+4.0, 0.0, -0.75, 0.0), "pt")),
+    axis.title         = element_text(color  = cTitle),
+    axis.text          = element_text(color = cTitle),
     panel.grid.major.x = element_line(color    = cTitle,
                                       size     = 0.05,
                                       linetype = 'solid'),
@@ -467,8 +464,8 @@ ggsave(
   filename = 'out/relation_prevatt.png',
   plot = plotRelationPrevAtt,
   type = 'cairo',
-  width = 55,
-  height = 55,
+  width = 91.5,
+  height = 91.5,
   units = 'mm'
 )
 
