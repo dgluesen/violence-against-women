@@ -1,18 +1,26 @@
-# ------------------------------------------------------------------------------------- #
-# violence-against-women                                                                #
-# DATA STUDY ABOUT VIOLENCE AGAINST WOMEN IN DIFFERENT COUNTRIES                        #
-# Author: Dennis Gluesenkamp                                                            #
-# ------------------------------------------------------------------------------------- #
+---
+title: "Violence against women"
+author: "Dennis Gluesenkamp"
+date: "November 2019"
+output: html_document
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 
-# ---- Libraries/packages used in this script ----
+### Packages und supporting function
+In this script the following libraries/packages are used.
+```{r libraries, message = F, warning = F}
 library(dplyr)                            # data manipulation focused on data frames
 library(ggplot2)                          # general plotting engine
 library(ggrepel)                          # labels with allocation line
 library(showtext)                         # usage of Google fonts
+```
 
-
-# ---- Function to get country groups ----
+Furthermore, the function getCountriesOf() is defined. This makes it easier to subdivide states by membership to some specific organizations, here EU and OECD.
+```{r country_groups_function, include = FALSE}
 getCountriesOf <- function(organization) {
   if(base::tolower(organization) == 'eu'){                        # European Union
     org_df <- c('AT', 'BE', 'BG', 'CY', 'CZ',
@@ -42,16 +50,22 @@ getCountriesOf <- function(organization) {
   }
   return(org_df)
 }
+```
 
 
-# ---- Style configuration ----
+### Style configuration
+Selected fonts should be used for the graphics. The selected Fjalla One and Lora will first be added and then made available. Here the package showtext is used.
+```{r style01, message = F, warning = F}
 font_add_google(name = 'Fjalla One', family = 'Fjalla One')
 font_add_google(name = 'Lora', family = 'Lora')
-showtext_auto()
+showtext_auto() # have to be called only once
 fontTitle = 'Fjalla One'
 fontText  = 'Lora'
 fontSize  = 20
+```
 
+The graphic design also includes a choice of colors, which should be oriented to the topic. Therefore, matching colors are extracted from the image, which is to become the cover picture. Color scales are also created, which allow highlighting or a gradual scale in the visualizations. These colors are then stored in variables so that they can be adjusted centrally if desired.
+```{r style02, message = F, warning = F}
 cBackground = '#191718'
 cShadow     = '#59504b'
 cTitle      = '#c38d72'
@@ -59,9 +73,12 @@ cText       = '#d9c2b6'
 cScatter    = c('#db5461', '#2e3b94') # first normal scatter, second highlight scatter
 cHue        = c('#eaddd7', '#e9beaf', '#e69e8e', '#e27b74', '#db5461', '#665E62')
 cGradual    = c('#f8f3f1', '#920000')
+```
 
-# Note: The following specifications are aligned to the later used ggsave statement which
-# is optimized for a squared output.
+Finally, the default values of the ggplot2 theme are adjusted comprehensively. The previously defined fonts and colors are used. For the fonts, factors are set so that the size relation between titles, text and labels fits, even if the font size is generally changed. The margins are enlarged or reduced so that the space for the plot is used as efficiently as possible.
+
+By storing these settings, the same theme can be called up for several plots with one line of code, thus enabling an overall consistent design. Nevertheless, individual elements can still be overwritten later and adapted to the special diagram. This may be necessary for different plots such as scatter and bar plot.
+```{r theme, message = F, warning = F}
 themeViolence <- theme(
   plot.background  = element_rect(fill       = cBackground),
   panel.background = element_rect(fill       = cBackground),
@@ -121,9 +138,14 @@ themeViolence <- theme(
   
   complete = FALSE
 )
+```
+The font size and margin settings made up to this point are optimized for the corresponding target format. The above example is calibrated to a square post for Instagram, which is 1080 x 1080 pixels according to Chacon [[1](#chacon2019)]. This is also in accordance to the later used ggsave statement with the default plot resolution of 300dpi.
 
+### ISO codes
+A shortened spelling is often useful, and various joins and filters can be implemented more easily and quickly using short identification tags. For this reason, the table with the countries ISO codes is added here and slightly modified.
 
-# ---- Country ISO-code ----
+On the one hand Kosovo is amended because the ISO code is not available in the table of the package. In addition, there are different spellings/names of countries between the OECD data set, the ISO code table and the world map from ggplot2. These are aligned for the Czech Republic, Macedonia and the United Kingdom. Finally, only the codes, name, longitude, latitude and grouping are obtained. The latter is necessary to draw the country borders correctly.
+```{r iso}
 iso <- ISOcodes::ISO_3166_1 %>%
   dplyr::add_row(Alpha_2 = 'XK',
                  Alpha_3 = 'XKX',
@@ -144,13 +166,11 @@ iso <- ISOcodes::ISO_3166_1 %>%
                 code3 = Alpha_3,
                 country = Name,
                 mapgroup = group)
+```
 
-
-# ---- Attitude towards violence against women ----
-# The percentage of women who agree that a husband/partner is justified in beating his
-# wife/partner under certain circumstances
-# Source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en
-# (Accessed on 01 October 2019)
+### Data wrangling
+Now the data is read from the source file. Since different indicators are present in the data set, they are separated from each other. In addition, there are some redundancies resulting from groupings of nations in the data set. For example, France and other countries are assigned to the region "All regions" and "Europe and Central Asia" also. For this reason, only individual values are used via dplyr::filter().
+```{r attitudeprevalence}
 attitudeviolence <- utils::read.csv('dat/violence.csv', sep = ',', stringsAsFactors = FALSE) %>%
   dplyr::filter(REG == 'ALL' & INC == 'AIC' & VAR == 'RP_1_1') %>%
   dplyr::select(LOCATION, Time, Value) %>%
@@ -161,15 +181,7 @@ attitudeviolence <- utils::read.csv('dat/violence.csv', sep = ',', stringsAsFact
   dplyr::select(code3, year, attitudeviolence) %>%
   stats::reshape(timevar = 'year', idvar = 'code3', direction = 'wide') %>%
   dplyr::rename(attitudeviolence = attitudeviolence.2014)
-# Note: There are several measurement times in the original data set. However, only the
-# most recent survey from 2014 is used for this evaluation.
 
-
-# ---- Prevalence of violence in the lifetime ----
-# The percentage of women who have experienced physical and/or sexual violence from an
-# intimate partner at some time in their life
-# Source: OECD (2019), Violence against women (indicator). doi: 10.1787/f1eb4876-en
-# (Accessed on 01 October 2019)
 prevalenceviolence <- utils::read.csv('dat/violence.csv', sep = ',', stringsAsFactors = FALSE) %>%
   dplyr::filter(REG == 'ALL' & INC == 'AIC' & VAR == 'RP_1_2') %>%
   dplyr::select(LOCATION, Time, Value) %>%
@@ -180,19 +192,20 @@ prevalenceviolence <- utils::read.csv('dat/violence.csv', sep = ',', stringsAsFa
   dplyr::select(code3, year, prevalenceviolence) %>%
   stats::reshape(timevar = 'year', idvar = 'code3', direction = 'wide') %>%
   dplyr::rename(prevalenceviolence = prevalenceviolence.2014)
-# Note: There are several measurement times in the original data set. However, only the
-# most recent survey from 2014 is used for this evaluation.
+```
 
-
-# ---- Creation of pooling data frame ----
+Finally, a data frame with attitude towards violence and prevalence of violence as feature columns is created.
+```{r pooling}
 df <- iso %>%
   dplyr::select(code3) %>%
   base::unique() %>%
   dplyr::left_join(attitudeviolence, by = 'code3') %>%
   dplyr::left_join(prevalenceviolence, by = 'code3')
+```
 
-
-# ---- Creation of data frame and viz for violence in the EU ----
+### Creation of data frame and chart for violence in the EU
+We now start with the visualization of the data for the European Union and use a choropleth map. First a special data frame is created, which divides the values into categories, so that a discrete colouring is possible. The data frame also contains the longitude and latitude to draw the map with polygons.
+```{r eu_dataframe}
 df_euviolence <- iso %>%
   dplyr::filter(code2 %in% getCountriesOf('eu')) %>%
   dplyr::left_join(df, by = 'code3') %>%
@@ -215,15 +228,17 @@ df_euviolence$category <- factor(df_euviolence$category,
                                             '26% to 30%',
                                             'above 30%',
                                             'no value'))
-
-# Create supporting data frame comprising EU neighbors
+```
+Because not all European states are also EU members, a map with gaps would look somewhat strange if only EU states were taken into account. This is why neighbouring states are drawn as polygons that stand out slightly from the background. This results in the familiar shape of the European continent.
+```{r eu_neighbouring}
 df_euviolence_support <- iso %>%
   dplyr::filter(code2 %in% getCountriesOf('eu_neighborhood')) %>%
   dplyr::filter(lat < 72)
-
-# Drawing chart
+```
+Finally, the map can be drawn. Here the previously defined color values and the theme are used. Since the standard labelling of the axes is rather undesirable in the case of such a map, the theme is finally adapted at this point.
+```{r eu_plot}
 plotViolenceEU <- ggplot() +
-  geom_polygon(data  = df_euviolence_support,
+  geom_polygon(data  = df_euviolence_support,    # plot European countries
                color = cBackground,
                fill  = cShadow,
                alpha = 0.2,
@@ -231,7 +246,7 @@ plotViolenceEU <- ggplot() +
                aes(x     = long,
                    y     = lat,
                    group = mapgroup)) +
-  geom_polygon(data  = df_euviolence,
+  geom_polygon(data  = df_euviolence,            # plot EU-members
                color = cBackground,
                size  = 0.5,
                aes(x     = long,
@@ -250,8 +265,12 @@ plotViolenceEU <- ggplot() +
     axis.text.x = element_blank(),
     axis.text.y = element_blank()
   )
-
-# Export chart
+```
+```{r, echo=FALSE, out.width='55%', fig.align='center', fig.cap='Direct ouput in R environment'}
+plot(plotViolenceEU)
+```
+As you can see, the graphic is distorted in this way and the font sizes are inappropriate. However, as mentioned above, the graphics will be optimized for the social media channel Instagram. At 300dpi (default for ggsave) this results in dimensions of 9.15 x 9.15cm. The output is then achieved with the following statement.
+```{r eu_export}
 ggsave(
   filename = 'out/violence_eu.png',
   plot     = plotViolenceEU,
@@ -260,9 +279,15 @@ ggsave(
   height   = 91.5,
   units    = 'mm'
 )
+```
+```{r, echo=FALSE, out.width='55%', fig.align='center', fig.cap='Exported EU related chart, optimized for social media'}
+knitr::include_graphics('out/violence_eu.png')
+```
 
 
-# ---- Creation of data frame and viz for violence in OECD countries ----
+### Creation of data frame and chart for violence in OECD countries
+The configuration of a data frame to be plotted is the same as for the EU countries shown above. Since no map is to be drawn here, the information on longitude and latitude is not required.
+```{r oecd_dataframe, include = FALSE}
 df_oecdviolence <- iso %>%
   dplyr::filter(code2 %in% getCountriesOf('oecd')) %>%
   dplyr::left_join(df, by = 'code3') %>%
@@ -286,8 +311,9 @@ df_oecdviolence <- iso %>%
 # Reorder countries prevalence value 
 df_oecdviolence$code3 <- factor(df_oecdviolence$code3,
                                 levels = df_oecdviolence$code3[base::order(-df_oecdviolence$prevalenceviolence)])
-
-# Drawing chart
+```
+For the plot a few more elements have to be used and changed. All in all, the graphic consists of points with added values, lines as bar alternatives, and text fields for country names. In this case, the color coding is continuous and the labeling of the vertical axis is manually overwritten to percentages. Finally, a few colors are changed and the grid for the y-axis is added.
+```{r oecd_plot}
 plotViolenceOECD <- ggplot() +
   geom_segment(data  = df_oecdviolence,
                size  = fontSize * 0.0125,
@@ -341,8 +367,8 @@ plotViolenceOECD <- ggplot() +
                                       linetype = 'dotted'),
     legend.position    = 'none'
   )
-
-# Export chart
+```
+```{r oecd_export, include = FALSE}
 ggsave(
   filename = 'out/violence_oecd.png',
   plot     = plotViolenceOECD,
@@ -351,9 +377,15 @@ ggsave(
   height   = 91.5,
   units    = 'mm'
 )
+```
+```{r, echo=FALSE, out.width='55%', fig.align='center', fig.cap='Exported OECD related chart, optimized for social media'}
+knitr::include_graphics('out/violence_oecd.png')
+```
 
 
-# ---- Relationship between attitude towards and prevalence of violence ----
+### Relationship between attitude towards and prevalence of violence
+The last graph to be considered is the relationship between the prevalence of violence and the attitude towards its use. In this two-dimensional illustration, some countries will be highlighted and labelled. The selection for highlighted countries is purely subjective. Here, some major industrial nations and outliers are choosen.
+```{r relation_dataframe}
 df_relation <- iso %>%
   dplyr::left_join(df, by = 'code3') %>%
   dplyr::select(code2, code3, country,
@@ -373,10 +405,9 @@ df_relation <- iso %>%
     code2 == 'RU' ~ 'Russia',
     TRUE          ~ country
   ))
-# Note: The selection for highlighted countries is purely subjective; Here, some
-# major industrial nations and outliers are choosen
-
-# Drawing chart
+```
+An estimation function is added to the scatter plot in the background. The further adjustments are directed to the special design of this graphic, such as the different positioning of the country labels in two groups. For this purpose two geom_text_repel objects are used, whereby one is moved to the positive range and the other to the negative range with nudge_y.
+```{r relation_plot}
 plotRelationPrevAtt <- ggplot() +
   geom_line(data   = df_relation,
             stat   = 'smooth',
@@ -458,8 +489,8 @@ plotRelationPrevAtt <- ggplot() +
                                       linetype = 'solid'),
     legend.position    = 'none'
   )
-
-# Export chart
+```
+```{r relation_export, include = FALSE}
 ggsave(
   filename = 'out/relation_prevatt.png',
   plot     = plotRelationPrevAtt,
@@ -468,5 +499,10 @@ ggsave(
   height   = 91.5,
   units    = 'mm'
 )
+```
+```{r, echo=FALSE, out.width='55%', fig.align='center', fig.cap='Exported relationship chart, optimized for social media'}
+knitr::include_graphics('out/relation_prevatt.png')
+```
 
-
+### References
+[[1]]{#chacon2019} B Chacon (2019), Instagram Image Size & Dimensions for 2019 (+ Free Infographic!). https://later.com/blog/instagram-image-size/. Accessed: 2019-11-08
